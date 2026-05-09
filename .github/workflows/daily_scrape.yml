@@ -1,0 +1,41 @@
+name: Daily GitHub Trending Scraper
+
+# 配置触发时间
+on:
+  schedule:
+    # 每天北京时间早上 9:00 运行 (UTC 时间 01:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch: # 允许你手动点击按钮触发运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出仓库代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. 安装 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 3. 安装依赖
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      # 4. 运行爬虫脚本
+      - name: Run scraper
+        run: python gemini-code-1778317750528.py
+
+      # 5. (可选) 如果你想把抓取的结果保存并提交回仓库
+      - name: Commit and push if changed
+        run: |
+          git config --global user.email "bot@github.com"
+          git config --global user.name "Trending Bot"
+          git add .
+          git commit -m "Update trending data" || echo "No changes to commit"
+          git push
