@@ -77,3 +77,50 @@ if __name__ == "__main__":
     # 2. 写入 .txt 文件 (这样脚本运行完，文件会留在仓库里)
     with open("trending_report.txt", "w", encoding="utf-8") as f:
         f.write(report_content)
+        import os
+import requests
+import json
+
+# 从 GitHub Secrets 获取
+DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY")
+SLACK_URL = os.getenv("SLACK_WEBHOOK_URL")
+MY_JD = os.getenv("JD_CONTENT")
+
+def call_deepseek(content):
+    url = "https://api.deepseek.com/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {DEEPSEEK_KEY}"
+    }
+    
+    prompt = f"""
+    你是一个深谙产研圈文化的小红书博主，擅长把硬核 GitHub 项目讲得生动有趣。
+    请根据以下热点和我的招聘需求，写一篇小红书笔记。
+    
+    【今日 GitHub 热点】:
+    {content}
+    
+    【招聘岗位需求】:
+    {MY_JD}
+    
+    要求：
+    1. 标题要带“程序员”、“避坑”、“涨薪”或“新工具”等关键词。
+    2. 使用大量 Emoji，排版清爽。
+    3. 语气要像真人在分享，不要有 AI 味。
+    4. 结尾自然引导：'我们组也在招这方面的大牛，欢迎私信交流'。
+    """
+
+    payload = {
+        "model": "deepseek-v4-pro", # 或者使用 deepseek-v4-flash
+        "messages": [
+            {"role": "system", "content": "你是一个专业且幽默的产研招聘专家。"},
+            {"role": "user", "content": prompt}
+        ],
+        "stream": False
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    # DeepSeek 的响应结构与 OpenAI 一致
+    return response.json()['choices'][0]['message']['content']
+
+# ... 抓取和推送逻辑保持不变 ...
