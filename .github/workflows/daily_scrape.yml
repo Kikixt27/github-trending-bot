@@ -1,18 +1,17 @@
 name: Daily GitHub Trending Scraper
 
-# 配置触发时间
 on:
   schedule:
-    # 每天北京时间早上 9:00 运行 (UTC 时间 01:00)
+    # 每天北京时间早上 9:00 运行 (UTC 01:00)
     - cron: '0 1 * * *'
-  workflow_dispatch: # 允许你手动点击按钮触发运行
+  workflow_dispatch: # 允许手动点击按钮触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 检出仓库代码
+      # 1. 下载仓库代码
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -22,20 +21,25 @@ jobs:
         with:
           python-version: '3.9'
 
-      # 3. 安装依赖
+      # 3. 安装脚本需要的依赖库
       - name: Install dependencies
         run: |
           pip install requests beautifulsoup4
 
-      # 4. 运行爬虫脚本
-      - name: Run scraper
+      # 4. 运行你的整合版脚本 (核心步骤)
+      # 这里通过 env 将你设置的 Secrets 注入到 Python 环境中
+      - name: Run scraper and AI
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          WECHAT_ROBOT_URL: ${{ secrets.WECHAT_ROBOT_URL }}
+          JD_CONTENT: ${{ secrets.JD_CONTENT }}
         run: python main.py
 
-      # 5. (可选) 如果你想把抓取的结果保存并提交回仓库
+      # 5. 将生成的 trending_report.txt 保存并更新到仓库
       - name: Commit and push if changed
         run: |
-          git config --global user.email "bot@github.com"
-          git config --global user.name "Trending Bot"
-          git add .
-          git commit -m "Update trending data" || echo "No changes to commit"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add trending_report.txt
+          git commit -m "Update Daily Trending Report" || echo "No changes to commit"
           git push
