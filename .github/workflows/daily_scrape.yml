@@ -29,7 +29,7 @@ jobs:
 
       # 4. 运行爬虫脚本
       - name: Run scraper
-        run: python gemini-code-1778317750528.py
+        run: python main.py
 
       # 5. (可选) 如果你想把抓取的结果保存并提交回仓库
       - name: Commit and push if changed
